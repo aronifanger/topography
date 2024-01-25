@@ -40,6 +40,7 @@ class GeoElevationEstimator:
         self.lon_max = 0
         self.tree = None  # Será inicializado após carregar e filtrar os dados
         self.elevations = None  # Também será inicializado apropriadamente
+        self.k = 1  # Número de vizinhos para o KNN
 
     def load(self, lat, lon):
 
@@ -70,7 +71,7 @@ class GeoElevationEstimator:
         if lat > self.lat_max or lat < self.lat_min or lon > self.lon_max or lon < self.lon_min:
             self.load(lat, lon)
             
-        dist, indices = self.tree.query(np.deg2rad([[lat, lon]]), k=3)
+        dist, indices = self.tree.query(np.deg2rad([[lat, lon]]), k=self.k)
         neighbor_elevations = self.elevations[indices[0]]
         return self._weighted_elevation(neighbor_elevations, dist[0])
 
