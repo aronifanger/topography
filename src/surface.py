@@ -1,9 +1,9 @@
-from elevatrion_estimator import GeoElevationEstimator
-from input_output import load_multipolygon, save_multipolygon, load_polygon
-from poly_scaler import PolyScaler
+from src.elevatrion_estimator import GeoElevationEstimator
+from src.input_output import load_multipolygon, save_multipolygon, load_polygon
+from src.poly_scaler import PolyScaler
 from shapely.geometry import Polygon, MultiPolygon, Point
 from tqdm import tqdm
-from visualization import plot_multipolygon3d
+from src.visualization import plot_multipolygon3d
 import numpy as np
 
 

@@ -1,6 +1,6 @@
 from shapely.geometry import MultiPolygon, Polygon
-from visualization import plot_and_save_geometry
-from input_output import save_multipolygon
+from src.visualization import plot_and_save_geometry
+from src.input_output import save_multipolygon
 
 def generate_triangle_mesh(x_min=0, y_min=0, x_max=20, y_max=20, triangle_base=1):
     # altura de um triângulo equilátero

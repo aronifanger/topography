@@ -1,13 +1,13 @@
-from input_output import save_multipolygon, load_wkt, save_wkt
-from visualization import plot_and_save_geometry
+from src.input_output import save_multipolygon, load_wkt, save_wkt
+from src.visualization import plot_and_save_geometry
 
-from download import download_polygon_wkt
-from grid import generate_triangle_mesh
-from transform import wkt_to_polygon, normalize_multipolygon, multipolygon_to_stl
-from surface import load_multipolygon, assign_z_coordinate, update_z_dimension
+from src.download import download_polygon_wkt
+from src.grid import generate_triangle_mesh
+from src.transform import wkt_to_polygon, normalize_multipolygon, multipolygon_to_stl
+from src.surface import load_multipolygon, assign_z_coordinate, update_z_dimension
 
 from pathlib import Path
-from poly_scaler import PolyScaler
+from src.poly_scaler import PolyScaler
 import os
 
 
@@ -37,8 +37,7 @@ def generate_city_stl_with_base(osmid, location_name, grid_step, include_bottom)
     # Loading Grid (generate_grid.py)
     if not Path(grid_path + '.png').exists():
         grid = generate_triangle_mesh(triangle_base=grid_step)
-        plot_and_save_geometry(grid, grid_path + '.png')+
-        .
+        plot_and_save_geometry(grid, grid_path + '.png')
         save_multipolygon(grid, grid_path + '.json')
     else:
         grid = load_multipolygon(grid_path + '.json')
@@ -63,14 +62,14 @@ if __name__ == '__main__':
         # ('saopaulo_city', 298285, 0.5, True),
         # ('saojosedoscampos_city', 298019, 0.5, True),
         # ('belohorizonte_city', 368782, 0.5, True),
-        # ('saupaulo_state', 298204, 0.5, True),
+        ('saupaulo_state', 298204, 0.5, True),
         
         # ('saopaulo_city', 298285, 0.1, True),
         # ('saojosedoscampos_city', 298019, 0.1, True),
 
         # ('saopaulo_city', 298285, 0.5, False),
         
-        ('saopaulo_city', 298285, 0.1, False),
+        # ('saopaulo_city', 298285, 0.1, False),
         # ('saupaulo_state', 298204, 0.1, False),
     ]
     for location_name, osmid, grid_step, include_bottom in params:

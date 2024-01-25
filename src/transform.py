@@ -1,9 +1,9 @@
-from input_output import load_wkt, save_polygon
+from src.input_output import load_wkt, save_polygon
 from scipy.spatial import Delaunay
 from shapely.geometry import Polygon, MultiPolygon, Point
 from shapely.wkt import loads
 from stl import mesh
-from utils import remove_srid
+from src.utils import remove_srid
 import numpy as np
 
 def wkt_to_polygon(wkt_str):
@@ -53,90 +53,58 @@ def multipolygon_to_stl(multipolygon, filename):
     stl_mesh.save(filename)
 
 
-def normalize_multipolygon(multipolygon, x_y_scale=(19, 19), z_scale=(2, 0)):
-    # Calcular os mínimos e máximos de todas as coordenadas
+def normalize_multipolygon(multipolygon, scale=(1, 1, 1)):
+    # Calcular os mínimos de todas as coordenadas para a translação
     all_coords = [point for polygon in multipolygon.geoms for point in polygon.exterior.coords]
     min_x = min(x for x, y, z in all_coords)
-    max_x = max(x for x, y, z in all_coords)
     min_y = min(y for x, y, z in all_coords)
-    max_y = max(y for x, y, z in all_coords)
     min_z = min(z for x, y, z in all_coords)
-    max_z = max(z for x, y, z in all_coords)
-    
-    # Calcular o intervalo de X e Y mantendo a proporção
-    coord_range = max(max_x - min_x, max_y - min_y)
-    x_y_scale_factor = x_y_scale[0] / coord_range
-    z_scale_factor = z_scale[0] / (max_z - min_z)
     
     def normalize_point(x, y, z):
-        # Normalizar o ponto mantendo as proporções para X e Y
-        new_x = (x - min_x) * x_y_scale_factor + 1  # +1 para margem de 1cm
-        # Certificar de reverter o Y para manter a orientação original do polígono
-        new_y = (y - min_y) * x_y_scale_factor + 1  # +1 para margem de 1cm
-        new_z = (z - min_z) * z_scale_factor + z_scale[1]  # +0 porque estamos começando de 0 para a altura
+        # Reduzindo a escala do eixo z em 1000x
+        new_z = z / 1000.0
+        # Aplicando translação para que os pontos mínimos fiquem em 0,0,0
+        new_x = x - min_x
+        new_y = y - min_y
+        new_z = new_z - min_z
+        # Aplicando a escala adicional fornecida
+        new_x *= scale[0]
+        new_y *= scale[1]
+        new_z *= scale[2]
         return (new_x, new_y, new_z)
     
     # Criar e retornar um novo MultiPolygon normalizado
     normalized_polygons = []
     for polygon in multipolygon.geoms:
         new_exterior = [normalize_point(x, y, z) for x, y, z in polygon.exterior.coords]
-        new_polygon = Polygon(new_exterior[:-1])  # Excluir último ponto pois é uma repetição do primeiro
+        # Polygon espera que o primeiro e o último ponto sejam iguais; ao criar o new_polygon, eles serão verificados
+        new_polygon = Polygon(new_exterior)
         normalized_polygons.append(new_polygon)
     
     # Unimos todos os polígonos normalizados em um MultiPolygon
     return MultiPolygon(normalized_polygons)
 
-def normalize_polygon(polygon, target_width=20, target_height=20, margin=1):
-    # Obter as coordenadas dos pontos
-    coords = polygon.exterior.coords
-    
-    # Calcular os limites do polígono original
-    min_x = min(coord[0] for coord in coords)
-    max_x = max(coord[0] for coord in coords)
-    min_y = min(coord[1] for coord in coords)
-    max_y = max(coord[1] for coord in coords)
-    
-    # Calcular os fatores de escala mantendo a proporção
-    scale_x = (target_width - (2 * margin)) / (max_x - min_x)
-    scale_y = (target_height - (2 * margin)) / (max_y - min_y)
-    scale = min(scale_x, scale_y)  # Usamos o menor para manter a proporção
-    
-    # Normalizar as coordenadas
-    norm_coords = [(margin + (coord[0] - min_x) * scale, margin + (coord[1] - min_y) * scale) for coord in coords]
-    
-    # Criar um novo polígono com as coordenadas normalizadas
-    norm_polygon = Polygon(norm_coords)
-    return norm_polygon
 
+from shapely.geometry import MultiPolygon, Polygon
 
-def normalize_multipolygon_3d(multipolygon, target_width=20, target_height=20, target_depth=2, margin=1):
-    # Assumindo que o multipolygon contém uma coleção de objetos polígono
-
+def normalize_multipolygon_3d(multipolygon):
     # Calcular os limites dos polígonos
     min_x = min(coord[0] for p in multipolygon.geoms for coord in p.exterior.coords)
-    max_x = max(coord[0] for p in multipolygon.geoms for coord in p.exterior.coords)
     min_y = min(coord[1] for p in multipolygon.geoms for coord in p.exterior.coords)
-    max_y = max(coord[1] for p in multipolygon.geoms for coord in p.exterior.coords)
     min_z = min(coord[2] for p in multipolygon.geoms for coord in p.exterior.coords)
-    max_z = max(coord[2] for p in multipolygon.geoms for coord in p.exterior.coords)
 
-    # Calcular os fatores de escala mantendo a proporção
-    scale_x = (target_width - (2 * margin)) / (max_x - min_x)
-    scale_y = (target_height - (2 * margin)) / (max_y - min_y)
-    scale_z = (target_depth - (2 * margin)) / (max_z - min_z)
-    scale = min(scale_x, scale_y, scale_z)  # Mantém a proporção em todas as direções
+    # O fator de escala para o eixo z é fixo: 1/1000
+    scale_z = 1 / 1000
 
     # Normalizar cada polígono
     normalized_polygons = []
     for polygon in multipolygon.geoms:
-        # Normalizar as coordenadas considerando a dimensão 'z'
-        norm_coords = [
-            (
-                margin + (coord[0] - min_x) * scale,
-                margin + (coord[1] - min_y) * scale,
-                margin + (coord[2] - min_z) * scale
-            ) for coord in polygon.exterior.coords
-        ]
+        # Normalizar as coordenadas considerando a diminuição do eixo 'z'
+        norm_coords = [(
+            coord[0] - min_x,  # Translação para a origem no eixo x
+            coord[1] - min_y,  # Translação para a origem no eixo y
+            (coord[2] * scale_z) - min_z  # Redução da escala no eixo z e translação para a origem
+        ) for coord in polygon.exterior.coords]
         
         # Criar um novo polígono com as coordenadas normalizadas
         norm_polygon = Polygon(norm_coords)
