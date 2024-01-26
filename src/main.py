@@ -23,12 +23,14 @@ def generate_city_stl_with_base(osmid, location_name, grid_step, include_bottom)
     if not location_folder.exists():
         os.makedirs(location_folder)
 
-    wkt_path = location_folder / f"poly_{param_spec}.wkt"
+    wkt_path = location_folder / f"boundaries.wkt"
     if not wkt_path.exists():
+        print("Baixando fronteira...")
         wkt = download_polygon_wkt(osmid)
         save_wkt(wkt, wkt_path)
 
     # Triangulation (transform.py)
+    print("Carregando fronteira...")
     polygon_wkt = load_wkt(wkt_path)
     polygon = wkt_to_polygon(polygon_wkt)
     
@@ -36,22 +38,30 @@ def generate_city_stl_with_base(osmid, location_name, grid_step, include_bottom)
 
     # Loading Grid (generate_grid.py)
     if not Path(grid_path + '.png').exists():
+        print("Gerando mesh...")
         grid = generate_triangle_mesh(triangle_base=grid_step)
-        plot_and_save_geometry(grid, grid_path + '.png')
+        # plot_and_save_geometry(grid, grid_path + '.png')
+        print("Salvando mesh...")
         save_multipolygon(grid, grid_path + '.json')
     else:
+        print("Carregando mesh...")
         grid = load_multipolygon(grid_path + '.json')
 
     # Surface (surface_From_grid.py)
+    print("Inicializando scaler...")
     scaler = PolyScaler()
     scaler.fit(polygon)
+    print("Aplicando scaler no grid...")
     grid = scaler.inverse_transform(grid)
+    print("Adicionando terceira coordenada...")
     polygon3d = assign_z_coordinate(polygon, grid, include_bottom)
     save_multipolygon(polygon3d, f'data/maps/{location_name}/flat_surface_{param_spec}.json')
+    print("Estimando elevação...")
     polygon3d = update_z_dimension(polygon3d)
     save_multipolygon(polygon3d, f'data/maps/{location_name}/surface_{param_spec}.json')
 
     # STL generation (stl_generation.py)
+    print("Normalizando polígono...")
     norm_poly = normalize_multipolygon(polygon3d)
     # Chama a função para converter para um arquivo STL
     multipolygon_to_stl(norm_poly, filename=f'data/maps/{location_name}/surface_{param_spec}.stl')
