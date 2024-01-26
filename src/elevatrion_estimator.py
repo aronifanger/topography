@@ -19,9 +19,21 @@ def get_file_path(lat, lon):
     
     file_name = f"{lon_str}_{lat_str}cor_rec.txt"
     
-    # Exceptions
+    # Exceptions (check at http://www.dsr.inpe.br/topodata/acesso.php)
     exception_map = {"24_465cor_rec.txt": "23_465cor_rec.txt",
-                     "25_48_cor_rec.txt": "24_48_cor_rec.txt",}
+                     "25_48_cor_rec.txt": "24_48_cor_rec.txt",
+                     "24_45_cor_rec.txt": "23_45_cor_rec.txt",
+                     "34_54_cor_rec.txt": "33_54_cor_rec.txt",
+                     "33_525cor_rec.txt": "32_525cor_rec.txt",
+                     "32_51_cor_rec.txt": "31_51_cor_rec.txt",
+                     "30_495cor_rec.txt": "29_495cor_rec.txt",
+                     
+                     "23_42_cor_rec.txt": "22_42_cor_rec.txt",
+                     "21_405cor_rec.txt": "20_405cor_rec.txt",
+                     "17_39_cor_rec.txt": "16_39_cor_rec.txt",
+                     "12_375cor_rec.txt": "11_375cor_rec.txt",
+                     "10_36_cor_rec.txt": "09_36_cor_rec.txt",
+                     }
     file_name = exception_map.get(file_name, file_name)
 
     file_path = BASE_PATH / file_name
@@ -40,7 +52,7 @@ class GeoElevationEstimator:
         self.lon_max = 0
         self.tree = None  # Será inicializado após carregar e filtrar os dados
         self.elevations = None  # Também será inicializado apropriadamente
-        self.k = 1  # Número de vizinhos para o KNN
+        self.k = 3  # Número de vizinhos para o KNN
 
     def load(self, lat, lon):
 
