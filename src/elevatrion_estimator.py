@@ -1,8 +1,7 @@
-import re
-import pandas as pd
+from pathlib import Path
 from sklearn.neighbors import BallTree
 import numpy as np
-from pathlib import Path
+import pandas as pd
 
 BASE_PATH = Path("data/elevation")
 
@@ -17,7 +16,7 @@ def get_file_path(lat, lon):
     if lat_str.endswith("0"):
         lat_str = lat_str[:-1] + "_"
     
-    file_name = f"{lon_str}_{lat_str}cor_rec.txt"
+    file_name = f"{lon_str:02d}_{lat_str}cor_rec.txt"
     
     # Exceptions (check at http://www.dsr.inpe.br/topodata/acesso.php)
     exception_map = {"24_465cor_rec.txt": "23_465cor_rec.txt",
