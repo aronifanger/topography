@@ -1,5 +1,9 @@
 from src.main import generate_city_stl_with_base
 
+country_dict = {
+    'brasil_country': 59470,
+}
+
 states_dict = {
     # 'saupaulo_state': 298204,
     'riodejaneiro_state': 57963,
@@ -42,8 +46,9 @@ def process_map(maps, grid_step = 0.1, include_bottom = True):
 
 
 if __name__ == '__main__':
-    grid_step = 0.1
+    grid_step = 0.5
     include_bottom = True
+    process_map(country_dict, grid_step, include_bottom)
     process_map(states_dict, grid_step, include_bottom)
     process_map(city_dict, grid_step, include_bottom)
     process_map(regions_dict, grid_step, include_bottom)
